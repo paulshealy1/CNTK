@@ -812,6 +812,10 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
     epochEvalErrors.assign(epochEvalErrors.size(), EpochCriterion(0));
 
     double totalTimeInMBs = 0; // use double since timer has sub-microsecond time resolution
+    double readTimeInMBs = 0;
+    double forwardTimeInMBs = 0;
+    double backwardTimeInMBs = 0;
+    double updateTimesInMBs = 0;
 
     // initialize statistics
     size_t totalEpochSamples = 0;
@@ -944,7 +948,8 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
         // Per-minibatch performance measurements; only enabled when perfTraceLevel > 0
         Timer fineGrainedPerfMeasurementTimer;
         double readTime = 0;
-        double computeTime = 0;
+        double forwardComputingTime = 0;
+        double backwardComputingTime = 0;
         double parameterUpdateTime = 0;
         if (m_perfTraceLevel > 0)
             fineGrainedPerfMeasurementTimer.Start();
@@ -1036,6 +1041,15 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
 
                 net->ForwardProp(criterionNodes[0]);
 
+                if (m_perfTraceLevel > 0)
+                {
+                    std::unique_ptr<MatrixComputeStreamEvent> mainStreamSyncEvent(MatrixComputeStreamEvent::Create(net->GetDeviceId()));
+                    mainStreamSyncEvent->SynchronizeEvent();
+                    fineGrainedPerfMeasurementTimer.Stop();
+                    forwardComputingTime = fineGrainedPerfMeasurementTimer.ElapsedSeconds();
+                    fineGrainedPerfMeasurementTimer.Start();
+                }
+
                 // ===========================================================
                 // backprop
                 // ===========================================================
@@ -1057,7 +1071,7 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
             std::unique_ptr<MatrixComputeStreamEvent> mainStreamSyncEvent(MatrixComputeStreamEvent::Create(net->GetDeviceId()));
             mainStreamSyncEvent->SynchronizeEvent();
             fineGrainedPerfMeasurementTimer.Stop();
-            computeTime = fineGrainedPerfMeasurementTimer.ElapsedSeconds();
+            backwardComputingTime = fineGrainedPerfMeasurementTimer.ElapsedSeconds();
             fineGrainedPerfMeasurementTimer.Start();
         }
 
@@ -1187,8 +1201,13 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
             fineGrainedPerfMeasurementTimer.Stop();
             parameterUpdateTime = fineGrainedPerfMeasurementTimer.ElapsedSeconds();
 
-            PREPENDTS(stderr);
-            fprintf(stderr, "Perf trace: Worker MB size = %d, Read = %.5gs; Compute = %.5gs; Parameter update = %.5gs, Aggregate MB size = %d\n", (int)actualMBSize, readTime, computeTime, parameterUpdateTime, (int)aggregateNumSamples);
+            //PREPENDTS(stderr);
+            //fprintf(stderr, "Perf trace: Worker MB size = %d, Read = %.5gs; Compute = %.5gs; Parameter update = %.5gs, Aggregate MB size = %d\n", (int)actualMBSize, readTime, computeTime, parameterUpdateTime, (int)aggregateNumSamples);
+
+            readTimeInMBs += readTime;
+            forwardTimeInMBs += forwardComputingTime;
+            backwardTimeInMBs += backwardComputingTime;
+            updateTimesInMBs += updateTimesInMBs;
         }
 
         // aggregation by model averaging or block momentum 
@@ -1273,6 +1292,8 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
 
                 fprintf(stderr, ("time = " + GeneratePaddedFloatOrExpFormat(0, 4, totalTimeInMBs) + "s; samplesPerSecond = %.1f\n").c_str(),
                         totalTimeInMBs, trainSamplesSinceLastLogged / totalTimeInMBs);
+                fprintf(stderr, "avgReadTime = %.3f; avgForwardTime = %.3f, avgBackwardTime = %.3f, avgUpdateTime = %.3f\n", 
+                    readTimeInMBs, forwardTimeInMBs, backwardTimeInMBs, updateTimesInMBs);
             }
 
             // progress tracing for compute cluster management
@@ -1291,6 +1312,10 @@ size_t SGD<ElemType>::TrainOneEpoch(ComputationNetworkPtr net,
             numMBsRunSinceLastLogged = numMBsRun;
 
             totalTimeInMBs = 0;
+            readTimeInMBs = 0;
+            forwardTimeInMBs = 0;
+            backwardTimeInMBs = 0;
+            updateTimesInMBs = 0;
         }
 
         timer.Restart();
