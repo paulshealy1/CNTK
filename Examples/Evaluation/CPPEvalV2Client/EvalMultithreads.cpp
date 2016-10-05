@@ -11,7 +11,7 @@
 
 using namespace CNTK;
 
-void outputFunctionInfo(FunctionPtr);
+void OutputFunctionInfo(FunctionPtr);
 FunctionPtr FullyConnectedDNNLayerWithSharedParameters(Variable, const Parameter&, const Parameter&, const std::function<FunctionPtr(const FunctionPtr&)>&);
 void CreateFunctionAndEvaluateWithSharedParameters(size_t, size_t, size_t, const Parameter&, const Parameter&, const Parameter[], const Parameter[], const Parameter&, const DeviceDescriptor&);
 FunctionPtr SetupFullyConnectedLinearLayer(Variable, size_t, const DeviceDescriptor&, const std::wstring&);
@@ -103,7 +103,7 @@ void MultiThreadsEvaluationWithClone(const DeviceDescriptor& device, const int t
         throw std::runtime_error("MultiThreadsEvaluationWithClone: Function does not have expected Parameter count");
     }
 
-    outputFunctionInfo(classifierFunc);
+    OutputFunctionInfo(classifierFunc);
     fprintf(stderr, "MultiThreadsEvaluationWithClone on device=%d\n", device.Id());
 
     // Run evaluation in parallel
@@ -135,7 +135,7 @@ void MultiThreadsEvaluationWithLoadModel(const DeviceDescriptor& device, const i
     auto modelFuncPtr = CNTK::LoadLegacyModel(DataType::Float, L"01_OneHidden", device);
 
 
-    outputFunctionInfo(modelFuncPtr);
+    OutputFunctionInfo(modelFuncPtr);
     fprintf(stderr, "MultiThreadsEvaluationWithLoadModel on device=%d\n", device.Id());
 
     // Run evaluation in parallel.
@@ -284,7 +284,7 @@ inline FunctionPtr SetupFullyConnectedDNNLayer(Variable input, size_t outputDim,
     return nonLinearity(SetupFullyConnectedLinearLayer(input, outputDim, device));
 }
 
-void outputFunctionInfo(FunctionPtr func)
+void OutputFunctionInfo(FunctionPtr func)
 {
     auto inputVariables = func->Arguments();
     fprintf(stderr, "Function %S: Input Variables (count=%lu)\n", func->Name().c_str(), inputVariables.size());
