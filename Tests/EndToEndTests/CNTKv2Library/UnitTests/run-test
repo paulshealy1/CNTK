@@ -43,8 +43,6 @@ DeleteModelsAfterTest=0
 cntkrun 01_OneHidden.cntk "stderr=- command=trainNetwork trainNetwork=[SGD=[maxEpochs=1]]" || exit $?
 cp $OutputDir/Models/01_OneHidden $TestDataDir || exit $?
 
-
-
 pushd $TestDataDir
 
 if [ "$OS" == "Windows_NT" ]; then
@@ -54,7 +52,6 @@ else
 fi
 
 ExitCode=$?
-
 
 # Delete the test data
 popd
