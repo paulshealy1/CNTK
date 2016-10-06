@@ -27,6 +27,8 @@ public:
         return m_deserializer->GetStreamDescriptions();
     }
 
+    void SetCurrentSamplePosition(size_t currentSamplePosition) override;
+
 private:
     // Gets next sequence descriptions with total size less than sampleCount.
     std::vector<SequenceDescription> GetNextSequenceDescriptions(size_t sampleCount);

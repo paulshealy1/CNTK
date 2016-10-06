@@ -27,6 +27,8 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         // Reads a single minibatch.
         Minibatch ReadMinibatch() override;
 
+        void SetCurrentSamplePosition(size_t currentSamplePosition) override;
+
         virtual ~ReaderBase() = 0;
 
     protected:

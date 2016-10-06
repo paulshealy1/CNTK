@@ -63,4 +63,9 @@ Minibatch ReaderBase::ReadMinibatch()
     return m_packer->ReadMinibatch();
 }
 
+void ReaderBase::SetCurrentSamplePosition(size_t currentSamplePosition)
+{
+    m_sequenceEnumerator->SetCurrentSamplePosition(currentSamplePosition);
+}
+
 }}}

@@ -109,6 +109,9 @@ public:
     // Starts a new epoch with the provided configuration
     virtual void StartEpoch(const EpochConfiguration& config, const std::map<std::wstring, int>& inputDescriptions) = 0;
 
+    // Set current global position
+    virtual void SetCurrentSamplePosition(size_t currentSamplePosition) = 0;
+
     // Reads a minibatch that contains data across all streams.
     virtual Minibatch ReadMinibatch() = 0;
 
