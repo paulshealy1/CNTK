@@ -19,7 +19,7 @@ set PATH=c:\local\swigwin-3.0.10;%PATH%
     # Build -> generate .pyd
 
     # 1) Run the following:
-    python .\setup.py build_ext --inplace --force
+    python .\setup.py build_ext --inplace --force --compiler msvc
 
     # 2) add to PATH the path to CNTK dlls (e.g. in ..\..\x64\Release)
         set PATH=%CD%\..\..\x64\Release;%PATH%
