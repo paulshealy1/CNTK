@@ -43,6 +43,10 @@ DeleteModelsAfterTest=0
 cntkrun 01_OneHidden.cntk "stderr=- command=trainNetwork trainNetwork=[SGD=[maxEpochs=1]]" || exit $?
 cp $OutputDir/Models/01_OneHidden $TestDataDir || exit $?
 
+if [ "$TEST_DEVICE" == "cpu" ]; then
+  export CUDA_VISIBLE_DEVICES=10000
+fi
+
 pushd $TestDataDir
 
 if [ "$OS" == "Windows_NT" ]; then
@@ -56,5 +60,9 @@ ExitCode=$?
 # Delete the test data
 popd
 rm -rf $TestDataDir
+
+if [ "$TEST_DEVICE" == "cpu" ]; then
+  unset CUDA_VISIBLE_DEVICES
+fi
 
 exit $ExitCode
